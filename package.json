@@ -7,7 +7,11 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "node --check index.js && node --check routes/category.routes.js && node --check routes/product.routes.js && node --check lib/prisma.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
