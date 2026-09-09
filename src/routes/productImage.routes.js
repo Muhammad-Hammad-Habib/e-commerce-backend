@@ -10,10 +10,21 @@ import {
 
 const router = express.Router();
 
-router.post("/", upload.single("image"), createProductImage);
+router.post(
+  "/",
+  upload.fields([
+    { name: "mainImage", maxCount: 1 },
+    { name: "supportingImages", maxCount: 3 },
+  ]),
+  createProductImage,
+);
 router.get("/", getProductImages);
 router.get("/:id", getProductImageById);
-router.put("/:id", upload.single("image"), updateProductImage);
+router.put(
+  "/:id",
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  updateProductImage,
+);
 router.delete("/:id", deleteProductImage);
 
 export default router;

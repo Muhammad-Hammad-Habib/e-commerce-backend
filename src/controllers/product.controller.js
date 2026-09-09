@@ -8,11 +8,17 @@ import {
 const createProduct = asyncHandler(async (req, res) => {
   const { name, slug, description, price, stock, isActive, categoryId } =
     req.body;
-
-  if (!name || !slug || price === undefined || stock === undefined || !categoryId) {
+  console.log(req.body);
+  if (
+    !name ||
+    !slug ||
+    price === undefined ||
+    stock === undefined ||
+    !categoryId
+  ) {
     throw AppError(
       "Product name, slug, price, stock, and categoryId are required",
-      400
+      400,
     );
   }
 
@@ -26,17 +32,13 @@ const createProduct = asyncHandler(async (req, res) => {
       isActive: isActive === undefined ? true : Boolean(isActive),
       categoryId: Number(categoryId),
     },
-    include: {
-      category: true,
-      images: true,
-    },
   });
 
   res.status(201).json({
     success: true,
     data: product,
   });
-});
+}, "createProduct");
 
 const getProducts = asyncHandler(async (req, res) => {
   const products = await prisma.product.findMany({

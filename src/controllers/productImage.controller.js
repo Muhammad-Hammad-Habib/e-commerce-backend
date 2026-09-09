@@ -21,8 +21,14 @@ function parseBoolean(value, defaultValue = false) {
 const createProductImage = asyncHandler(async (req, res) => {
   const { productId, isPrimary } = req.body;
 
-  if (!req.file) {
-    throw AppError("Image file is required. Use the field name: image", 400);
+  const mainImage = req.files?.mainImage?.[0];
+  const supportingImages = req.files?.supportingImages || [];
+
+  if (!mainImage) {
+    throw AppError(
+      "Main image is required. Use the field name: mainImage",
+      400,
+    );
   }
 
   if (!productId) {
@@ -39,22 +45,41 @@ const createProductImage = asyncHandler(async (req, res) => {
     throw AppError("Product not found", 404);
   }
 
-  const uploadResult = await uploadToCloudinary(req.file.buffer);
+  // Upload main image
+  const mainUpload = await uploadToCloudinary(mainImage.buffer);
 
-  const productImage = await prisma.productImage.create({
+  // Create main image record
+  const mainProductImage = await prisma.productImage.create({
     data: {
-      url: uploadResult.secure_url,
-      isPrimary: parseBoolean(isPrimary, false),
+      url: mainUpload.secure_url,
+      isPrimary: true,
       productId: parsedProductId,
-    },
-    include: {
-      product: true,
     },
   });
 
+  // Upload supporting images
+  const supportingProductImages = [];
+
+  for (const image of supportingImages) {
+    const uploadResult = await uploadToCloudinary(image.buffer);
+
+    const productImage = await prisma.productImage.create({
+      data: {
+        url: uploadResult.secure_url,
+        isPrimary: false,
+        productId: parsedProductId,
+      },
+    });
+
+    supportingProductImages.push(productImage);
+  }
+
   res.status(201).json({
     success: true,
-    data: productImage,
+    data: {
+      mainImage: mainProductImage,
+      supportingImages: supportingProductImages,
+    },
   });
 });
 
