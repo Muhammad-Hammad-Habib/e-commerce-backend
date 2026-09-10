@@ -5,34 +5,31 @@ import {
   asyncHandler,
 } from "../middleware/error.middleware.js";
 
-const createOrder = asyncHandler(async (req, res) => {
-  const {
-    orderNumber,
-    status,
-    subtotal,
-    deliveryFee,
-    total,
-    paymentMethod,
-    userId,
-    addressId,
-  } = req.body;
+import crypto from "crypto";
 
-  if (
-    subtotal === undefined ||
-    total === undefined ||
-    !userId ||
-    !addressId
-  ) {
+const generateOrderNumber = () => {
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+
+  const random = crypto.randomBytes(4).toString("hex").toUpperCase();
+
+  return `ORD-${date}-${random}`;
+};
+
+const createOrder = asyncHandler(async (req, res) => {
+  const { status, subtotal, deliveryFee, paymentMethod, userId, addressId } =
+    req.body;
+
+  if (subtotal === undefined || !userId || !addressId) {
     throw AppError("subtotal, total, userId, and addressId are required", 400);
   }
 
   const order = await prisma.order.create({
     data: {
-      orderNumber: orderNumber || `ORD-${Date.now()}`,
+      orderNumber: generateOrderNumber(),
       status,
       subtotal,
       deliveryFee,
-      total,
+      total: subtotal + deliveryFee,
       paymentMethod,
       userId: Number(userId),
       addressId: Number(addressId),
@@ -126,7 +123,6 @@ const getOrderById = asyncHandler(async (req, res) => {
 const updateOrder = asyncHandler(async (req, res) => {
   const id = parseId(req.params.id);
   const {
-    orderNumber,
     status,
     subtotal,
     deliveryFee,
@@ -147,7 +143,7 @@ const updateOrder = asyncHandler(async (req, res) => {
   const order = await prisma.order.update({
     where: { id },
     data: {
-      orderNumber,
+      orderNumber: "ORD-" + generateOrderNumber(),
       status,
       subtotal,
       deliveryFee,
@@ -201,10 +197,4 @@ const deleteOrder = asyncHandler(async (req, res) => {
   });
 });
 
-export {
-  createOrder,
-  getOrders,
-  getOrderById,
-  updateOrder,
-  deleteOrder,
-};
+export { createOrder, getOrders, getOrderById, updateOrder, deleteOrder };
