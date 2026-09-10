@@ -18,8 +18,8 @@ const userWithoutPassword = {
 const createUser = asyncHandler(async (req, res) => {
   const { name, email, password, phone, role } = req.body;
 
-  if (!name || !email || !password) {
-    throw AppError("User name, email, and password are required", 400);
+  if (!name || !email || !password || !phone) {
+    throw AppError("User name, email, password, and phone are required", 400);
   }
 
   const user = await prisma.user.create({
@@ -136,10 +136,4 @@ const deleteUser = asyncHandler(async (req, res) => {
   });
 });
 
-export {
-  createUser,
-  getUsers,
-  getUserById,
-  updateUser,
-  deleteUser,
-};
+export { createUser, getUsers, getUserById, updateUser, deleteUser };

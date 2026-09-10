@@ -144,10 +144,4 @@ const deleteCart = asyncHandler(async (req, res) => {
   });
 });
 
-export {
-  createCart,
-  getCarts,
-  getCartById,
-  updateCart,
-  deleteCart,
-};
+export { createCart, getCarts, getCartById, updateCart, deleteCart };

@@ -12,7 +12,7 @@ const createAddress = asyncHandler(async (req, res) => {
   if (!fullName || !phone || !addressLine || !city || !userId) {
     throw AppError(
       "fullName, phone, addressLine, city, and userId are required",
-      400
+      400,
     );
   }
 
