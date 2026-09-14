@@ -29,7 +29,7 @@ app.get("/", (req, res) => {
 app.use("/api/categories", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/product-images", productImageRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/user", userRoutes);
 app.use("/api/addresses", addressRoutes);
 // app.use("/api/carts", cartRoutes);
 // app.use("/api/cart-items", cartItemRoutes);

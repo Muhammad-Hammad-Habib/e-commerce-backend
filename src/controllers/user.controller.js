@@ -1,4 +1,6 @@
 import prisma from "../lib/prisma.js";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import {
   AppError,
   parseId,
@@ -21,21 +23,73 @@ const createUser = asyncHandler(async (req, res) => {
   if (!name || !email || !password || !phone) {
     throw AppError("User name, email, password, and phone are required", 400);
   }
-
+  console.log(typeof process.env.BCRYPT_SALT_ROUNDS);
+  const hashedPassword = await bcrypt.hash(
+    password,
+    Number(process.env.BCRYPT_SALT_ROUNDS),
+  );
   const user = await prisma.user.create({
     data: {
       name,
       email,
-      password,
+      password: hashedPassword,
       phone,
       role,
     },
     select: userWithoutPassword,
   });
 
+  if (!user) {
+    throw AppError("Failed to create user", 500);
+  }
+
   res.status(201).json({
     success: true,
     data: user,
+  });
+});
+
+const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+  });
+
+  if (!user) {
+    throw AppError("Invalid email or password", 401);
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    throw AppError("Invalid email or password", 401);
+  }
+
+  const token = jwt.sign(
+    {
+      userId: user.id,
+      role: user.role,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    },
+  );
+  // 5. Remove password from response
+  const { password: _password, ...userWithoutPassword } = user;
+
+  res.json({
+    success: true,
+    data: userWithoutPassword,
+    token,
   });
 });
 
@@ -44,7 +98,7 @@ const getUsers = asyncHandler(async (req, res) => {
     select: {
       ...userWithoutPassword,
       addresses: true,
-      cart: true,
+      // cart: true,
     },
     orderBy: {
       id: "asc",
@@ -66,11 +120,11 @@ const getUserById = asyncHandler(async (req, res) => {
       ...userWithoutPassword,
       addresses: true,
       orders: true,
-      cart: {
-        include: {
-          items: true,
-        },
-      },
+      // cart: {
+      //   include: {
+      //     items: true,
+      //   },
+      // },
     },
   });
 
@@ -136,4 +190,4 @@ const deleteUser = asyncHandler(async (req, res) => {
   });
 });
 
-export { createUser, getUsers, getUserById, updateUser, deleteUser };
+export { createUser, loginUser, getUsers, getUserById, updateUser, deleteUser };
