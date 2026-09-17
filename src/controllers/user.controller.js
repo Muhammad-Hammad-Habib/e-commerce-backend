@@ -86,11 +86,14 @@ const loginUser = asyncHandler(async (req, res) => {
   // 5. Remove password from response
   const { password: _password, ...userWithoutPassword } = user;
 
+  // res.redirect()
+
   res.json({
     success: true,
     data: userWithoutPassword,
     token,
-  });
+    role:user.role
+  })
 });
 
 const getUsers = asyncHandler(async (req, res) => {
