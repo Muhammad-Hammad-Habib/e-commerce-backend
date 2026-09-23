@@ -6,6 +6,7 @@ import {
   parseId,
   asyncHandler,
 } from "../middleware/error.middleware.js";
+import { response } from "express";
 
 const userWithoutPassword = {
   id: true,
@@ -19,11 +20,22 @@ const userWithoutPassword = {
 
 const createUser = asyncHandler(async (req, res) => {
   const { name, email, password, phone, role } = req.body;
-
+  console.log(req.body);
   if (!name || !email || !password || !phone) {
     throw AppError("User name, email, password, and phone are required", 400);
   }
-  console.log(typeof process.env.BCRYPT_SALT_ROUNDS);
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await prisma.user.findUnique({
+    where: {
+      email: normalizedEmail,
+    },
+  });
+
+  if (existingUser) {
+    const i = AppError("Email is already registered", 409);
+    throw i;
+  }
+
   const hashedPassword = await bcrypt.hash(
     password,
     Number(process.env.BCRYPT_SALT_ROUNDS),
@@ -92,8 +104,8 @@ const loginUser = asyncHandler(async (req, res) => {
     success: true,
     data: userWithoutPassword,
     token,
-    role:user.role
-  })
+    role: user.role,
+  });
 });
 
 const getUsers = asyncHandler(async (req, res) => {
@@ -123,11 +135,6 @@ const getUserById = asyncHandler(async (req, res) => {
       ...userWithoutPassword,
       addresses: true,
       orders: true,
-      // cart: {
-      //   include: {
-      //     items: true,
-      //   },
-      // },
     },
   });
 

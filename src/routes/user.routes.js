@@ -8,15 +8,19 @@ import {
   loginUser,
 } from "../controllers/user.controller.js";
 import { authenticateUser } from "../middleware/auth.middleware.js";
+import { requireAdmin } from "../middleware/onlyAdminAccess.middleware.js";
 
 const router = express.Router();
 
 router.post("/register_user", createUser);
-router.get("/get_all_users", getUsers);
-router.get("/get_user/:id", getUserById);
-router.put("/update_user/:id", updateUser);
-router.delete("/delete_user/:id", deleteUser);
-
 router.post("/login_user", loginUser);
+
+// only current user route
+router.get("/get_user/:id", authenticateUser, getUserById);
+router.put("/update_user/:id", authenticateUser, updateUser);
+router.delete("/delete_user/:id", authenticateUser, deleteUser);
+
+// only for admin access route
+router.get("/get_all_users", requireAdmin, getUsers);
 
 export default router;

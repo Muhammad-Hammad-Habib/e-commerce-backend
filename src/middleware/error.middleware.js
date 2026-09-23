@@ -1,6 +1,8 @@
 export function AppError(message, statusCode = 400) {
   const error = new Error(message);
   error.statusCode = statusCode;
+  console.log("-3298")
+  console.log(error)
   return error;
 }
 
@@ -9,6 +11,7 @@ export function parseId(value) {
 
   if (!Number.isInteger(id) || id <= 0) {
     throw AppError("Invalid ID", 400);
+    
   }
 
   return id;
