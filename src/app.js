@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
   });
 });
 
-app.use("/api/categories", categoryRoutes);
+app.use("/api/category", categoryRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/product-images", productImageRoutes);
 app.use("/api/user", userRoutes);

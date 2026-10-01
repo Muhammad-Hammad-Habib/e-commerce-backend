@@ -50,7 +50,7 @@ model User {
 model Category {
   id          Int     @id @default(autoincrement())
   name        String  @unique
-  slug        String  @unique
+  slug        String 
   description String?
 
   products Product[]

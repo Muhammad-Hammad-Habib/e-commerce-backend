@@ -1,8 +1,8 @@
 export function AppError(message, statusCode = 400) {
   const error = new Error(message);
   error.statusCode = statusCode;
-  console.log("-3298")
-  console.log(error)
+  console.log("-3298");
+  console.log(error);
   return error;
 }
 
@@ -11,7 +11,6 @@ export function parseId(value) {
 
   if (!Number.isInteger(id) || id <= 0) {
     throw AppError("Invalid ID", 400);
-    
   }
 
   return id;
@@ -22,7 +21,7 @@ export function notFound(req, res, next) {
 }
 
 export function errorHandler(err, req, res, next) {
-  console.error(err);
+  // console.error(err);
 
   if (err.code === "LIMIT_FILE_SIZE") {
     return res.status(400).json({
@@ -57,6 +56,16 @@ export function errorHandler(err, req, res, next) {
   }
 
   if (err.code === "P2003") {
+    if (
+      err.meta?.driverAdapterError?.cause?.kind ===
+      "ForeignKeyConstraintViolation"
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "This record cannot be deleted because it is referenced by other data.",
+      });
+    }
     return res.status(400).json({
       success: false,
       message: "Related record not found. Check your IDs",

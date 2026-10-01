@@ -16,7 +16,7 @@ router.post("/register_user", createUser);
 router.post("/login_user", loginUser);
 
 // only current user route
-router.get("/get_user/:id", authenticateUser, getUserById);
+router.get("/get_user", authenticateUser, getUserById);
 router.put("/update_user/:id", authenticateUser, updateUser);
 router.delete("/delete_user/:id", authenticateUser, deleteUser);
 

@@ -87,7 +87,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const token = jwt.sign(
     {
-      userId: user.id,
+      id: user.id,
       role: user.role,
     },
     process.env.JWT_SECRET,
@@ -127,8 +127,9 @@ const getUsers = asyncHandler(async (req, res) => {
 });
 
 const getUserById = asyncHandler(async (req, res) => {
-  const id = parseId(req.params.id);
-
+  console.log(req.user);
+  const id = parseId(req.user.id);
+  console.log("Hello " + id);
   const user = await prisma.user.findUnique({
     where: { id },
     select: {
