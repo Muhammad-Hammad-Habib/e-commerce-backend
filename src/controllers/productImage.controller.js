@@ -20,10 +20,13 @@ function parseBoolean(value, defaultValue = false) {
 
 const createProductImage = asyncHandler(async (req, res) => {
   const { productId, isPrimary } = req.body;
-
+  console.log("Request Body:", req.body);
+  console.log("Request Body:", req.body);
   const mainImage = req.files?.mainImage?.[0];
   const supportingImages = req.files?.supportingImages || [];
 
+  console.log("Main Image:", mainImage);
+  console.log("Supporting Images:", supportingImages);
   if (!mainImage) {
     throw AppError(
       "Main image is required. Use the field name: mainImage",

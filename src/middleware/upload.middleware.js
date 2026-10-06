@@ -14,11 +14,11 @@ function fileFilter(req, file, cb) {
   if (!isValidExtension) {
     return cb(AppError("Only image files are allowed", 400));
   }
-  // const isValidMimeType = file.mimetype.startsWith("image/");
+  const isValidMimeType = file.mimetype.startsWith("image/");
 
-  // if (!isValidExtension || !isValidMimeType) {
-  //   return cb(AppError("Only image files are allowed", 400));
-  // }
+  if (!isValidExtension || !isValidMimeType) {
+    return cb(AppError("Only image files are allowed", 400));
+  }
 
   cb(null, true);
 }

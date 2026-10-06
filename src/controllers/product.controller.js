@@ -4,20 +4,27 @@ import {
   parseId,
   asyncHandler,
 } from "../middleware/error.middleware.js";
+import { uploadToCloudinary } from "../services/cloudinary.service.js";
 
 const createProduct = asyncHandler(async (req, res) => {
-  const { name, slug, description, price, stock, isActive, categoryId } =
-    req.body;
-  console.log(req.body);
-  if (
-    !name ||
-    !slug ||
-    price === undefined ||
-    stock === undefined ||
-    !categoryId
-  ) {
+  const { name, description, price, stock, isActive, categoryId } = req.body;
+  console.log("Request Body:", req.body);
+  const mainImage = req.files?.mainImage?.[0];
+  const supportingImages = req.files?.supportingImages || [];
+
+  console.log("Main Image:", mainImage);
+  console.log("Supporting Images:", supportingImages);
+
+  if (!name || price === undefined || stock === undefined || !categoryId) {
     throw AppError(
-      "Product name, slug, price, stock, and categoryId are required",
+      "Product name, price, stock, and categoryId are required",
+      400,
+    );
+  }
+
+  if (!mainImage) {
+    throw AppError(
+      "Main image is required. Use the field name: mainImage",
       400,
     );
   }
@@ -25,18 +32,53 @@ const createProduct = asyncHandler(async (req, res) => {
   const product = await prisma.product.create({
     data: {
       name,
-      slug,
+      slug: name,
       description,
       price,
-      stock: Number(stock),
+      stock: 0,
       isActive: isActive === undefined ? true : Boolean(isActive),
       categoryId: Number(categoryId),
     },
+    include: {
+      category: true,
+      images: true,
+    },
   });
 
+  // Upload main image
+  const mainUpload = await uploadToCloudinary(mainImage.buffer);
+
+  // Create main image record
+  const mainProductImage = await prisma.productImage.create({
+    data: {
+      url: mainUpload.secure_url,
+      isPrimary: true,
+      productId: product.id,
+    },
+  });
+
+  const supportingProductImages = [];
+
+  for (const image of supportingImages) {
+    const uploadResult = await uploadToCloudinary(image.buffer);
+
+    const productImage = await prisma.productImage.create({
+      data: {
+        url: uploadResult.secure_url,
+        isPrimary: false,
+        productId: product.id,
+      },
+    });
+
+    supportingProductImages.push(productImage);
+  }
   res.status(201).json({
     success: true,
-    data: product,
+    data: {
+      ...product,
+      images: [mainProductImage, ...supportingProductImages],
+    },
+    // imagesUrl: [mainProductImage, ...supportingProductImages],
   });
 }, "createProduct");
 
@@ -47,7 +89,8 @@ const getProducts = asyncHandler(async (req, res) => {
       images: true,
     },
     orderBy: {
-      id: "asc",
+      createdAt: "desc",
+      // updatedAt: "desc",
     },
   });
 

@@ -12,7 +12,7 @@ const router = express.Router();
 
 // Route with any middleware
 router.post(
-  "/",
+  "/uploadProductImage",
   upload.fields([
     { name: "mainImage", maxCount: 1 },
     { name: "supportingImages", maxCount: 3 },
