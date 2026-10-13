@@ -28,7 +28,6 @@ const createProduct = asyncHandler(async (req, res) => {
       400,
     );
   }
-
   const product = await prisma.product.create({
     data: {
       name,
@@ -36,7 +35,7 @@ const createProduct = asyncHandler(async (req, res) => {
       description,
       price,
       stock: 0,
-      isActive: isActive === undefined ? true : Boolean(isActive),
+      isActive: Boolean(isActive),
       categoryId: Number(categoryId),
     },
     include: {
@@ -82,11 +81,91 @@ const createProduct = asyncHandler(async (req, res) => {
   });
 }, "createProduct");
 
+const updateProduct = asyncHandler(async (req, res) => {
+  console.log("Request Body:", req.body);
+  const { name, description, price, stock, isActive, categoryId } = req.body;
+  const id = parseId(req.params.id);
+
+  const existing = await prisma.product.findUnique({
+    where: { id },
+  });
+  if (!existing) {
+    console.log("Product not found", existing);
+    throw AppError("Product not found", 404);
+  }
+
+  const product = await prisma.product.update({
+    where: { id },
+    data: {
+      name,
+      slug: name,
+      description,
+      price,
+      stock: 0,
+      isActive: isActive === "true",
+      categoryId: Number(categoryId),
+    },
+    include: {
+      category: true,
+      images: true,
+    },
+  });
+
+  const mainImage = req.files?.mainImage?.[0];
+  const supportingImages = req.files?.supportingImages || [];
+
+  // Replace the main image only when a new one is uploaded
+  if (mainImage) {
+    const uploadedMain = await uploadToCloudinary(mainImage.buffer);
+
+    const existingMain = existing.images.find((image) => image.isPrimary);
+
+    if (existingMain) {
+      await prisma.productImage.update({
+        where: { id: existingMain.id },
+        data: { url: uploadedMain.secure_url },
+      });
+    } else {
+      await prisma.productImage.create({
+        data: {
+          url: uploadedMain.secure_url,
+          isPrimary: true,
+          productId: id,
+        },
+      });
+    }
+  }
+
+  // Add any new supporting images
+  for (const image of supportingImages) {
+    const uploadedImage = await uploadToCloudinary(image.buffer);
+
+    await prisma.productImage.create({
+      data: {
+        url: uploadedImage.secure_url,
+        isPrimary: false,
+        productId: id,
+      },
+    });
+  }
+
+  console.log(product);
+  res.json({
+    success: true,
+    data: product,
+  });
+});
+
 const getProducts = asyncHandler(async (req, res) => {
   const products = await prisma.product.findMany({
     include: {
       category: true,
-      images: true,
+      images: {
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 4,
+      },
     },
     orderBy: {
       createdAt: "desc",
@@ -114,42 +193,6 @@ const getProductById = asyncHandler(async (req, res) => {
   if (!product) {
     throw AppError("Product not found", 404);
   }
-
-  res.json({
-    success: true,
-    data: product,
-  });
-});
-
-const updateProduct = asyncHandler(async (req, res) => {
-  const id = parseId(req.params.id);
-  const { name, slug, description, price, stock, isActive, categoryId } =
-    req.body;
-
-  const existing = await prisma.product.findUnique({
-    where: { id },
-  });
-
-  if (!existing) {
-    throw AppError("Product not found", 404);
-  }
-
-  const product = await prisma.product.update({
-    where: { id },
-    data: {
-      name,
-      slug,
-      description,
-      price,
-      stock: stock === undefined ? undefined : Number(stock),
-      isActive: isActive === undefined ? undefined : Boolean(isActive),
-      categoryId: categoryId === undefined ? undefined : Number(categoryId),
-    },
-    include: {
-      category: true,
-      images: true,
-    },
-  });
 
   res.json({
     success: true,

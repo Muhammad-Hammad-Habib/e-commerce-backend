@@ -27,7 +27,22 @@ router.post(
   ],
   createProduct,
 );
-router.put("/updateProduct/:id", requireAdmin, updateProduct);
-router.delete("/deleteProduct/:id", requireAdmin, deleteProduct);
+router.put(
+  "/updateProduct/:id",
+  [
+    authenticateUser,
+    requireAdmin,
+    upload.fields([
+      { name: "mainImage", maxCount: 1 },
+      { name: "supportingImages", maxCount: 3 },
+    ]),
+  ], 
+  updateProduct,
+);
+router.delete(
+  "/deleteProduct/:id",
+  [authenticateUser, requireAdmin],
+  deleteProduct,
+);
 
 export default router;
