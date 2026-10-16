@@ -158,11 +158,14 @@ const updateProduct = asyncHandler(async (req, res) => {
 
 const getProducts = asyncHandler(async (req, res) => {
   const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+    },
     include: {
       category: true,
       images: {
         orderBy: {
-          createdAt: "desc",
+          createdAt: "asc",
         },
         take: 4,
       },

@@ -28,8 +28,25 @@ const createCategory = asyncHandler(async (req, res) => {
 
 const getCategories = asyncHandler(async (req, res) => {
   const categories = await prisma.category.findMany({
-    include: {
-      products: true,
+    orderBy: {
+      id: "asc",
+    },
+  });
+
+  res.json({
+    success: true,
+    data: categories,
+  });
+});
+
+const getCategoriesForFilter = asyncHandler(async (req, res) => {
+  const categories = await prisma.category.findMany({
+    where: {
+      products: {
+        some: {
+          isActive: true,
+        },
+      },
     },
     orderBy: {
       id: "asc",
@@ -116,4 +133,5 @@ export {
   getCategoryById,
   updateCategory,
   deleteCategory,
+  getCategoriesForFilter,
 };
