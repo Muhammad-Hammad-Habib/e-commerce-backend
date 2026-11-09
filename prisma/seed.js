@@ -10,7 +10,7 @@ async function main() {
     create: {
       name: "Pipe Papad",
       slug: "pipe-papad",
-      description: "Traditional pipe-shaped papad",
+      description: "Traditional pipe-shaped pa pad",
     },
   });
 

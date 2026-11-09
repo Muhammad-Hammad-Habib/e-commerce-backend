@@ -36,7 +36,7 @@ router.put(
       { name: "mainImage", maxCount: 1 },
       { name: "supportingImages", maxCount: 3 },
     ]),
-  ], 
+  ],
   updateProduct,
 );
 router.delete(

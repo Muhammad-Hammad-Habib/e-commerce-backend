@@ -19,13 +19,14 @@ const createOrder = asyncHandler(async (req, res) => {
   const { status, subtotal, deliveryFee, paymentMethod, userId, addressId } =
     req.body;
 
+  // console.log(req.body);
   if (subtotal === undefined || !userId || !addressId) {
     throw AppError("subtotal, total, userId, and addressId are required", 400);
   }
-
+  // console.log("Creating order with data:", req.body);
   const order = await prisma.order.create({
     data: {
-      orderNumber: generateOrderNumber(),
+      orderNumber: `ORD-${Date.now()}`,
       status,
       subtotal,
       deliveryFee,
@@ -34,29 +35,21 @@ const createOrder = asyncHandler(async (req, res) => {
       userId: Number(userId),
       addressId: Number(addressId),
     },
-    include: {
-      user: {
-        select: {
-          id: true,
-          name: true,
-          email: true,
-          phone: true,
-          role: true,
-        },
-      },
-      address: true,
-      items: {
-        include: {
-          product: true,
-        },
-      },
-      payment: true,
-    },
   });
+
+  const cartItem = req.body.cartItems.map((item) => ({
+    ...item,
+    orderId: order.id,
+  }));
+
+  console.log("Order created:", cartItem);
+
+  const orderItem = await prisma.orderItem.createMany({ data: cartItem });
 
   res.status(201).json({
     success: true,
     data: order,
+    orderItems: orderItem,
   });
 });
 
